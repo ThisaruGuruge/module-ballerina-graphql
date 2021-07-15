@@ -237,7 +237,7 @@ class ValidatorVisitor {
                 __InputValue? inputValue = getInputValueFromArray(inputValues, argName);
                 if (inputValue is __InputValue) {
                     _ = notFoundInputValues.remove(<int>notFoundInputValues.indexOf(inputValue));
-                    self.visitArgument(argumentNode, inputValue);
+                    argumentNode.accept(self, inputValue);
                 } else {
                     string parentName = parentType?.name is string ? <string>parentType?.name : "";
                     string message = getUnknownArgumentErrorMessage(argName, parentName, fieldNode.getName());

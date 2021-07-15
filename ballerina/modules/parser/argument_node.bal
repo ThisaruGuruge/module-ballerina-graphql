@@ -27,6 +27,10 @@ public class ArgumentNode {
         self.kind = kind;
     }
 
+    public isolated function accept(Visitor visitor, anydata data = ()) {
+        visitor.visitArgument(self);
+    }
+
     public isolated function getName() returns ArgumentName {
         return self.name;
     }
