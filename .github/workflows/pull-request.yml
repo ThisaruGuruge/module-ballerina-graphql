@@ -16,6 +16,9 @@ jobs:
                     distribution: 'adopt'
                     java-version: '11'
 
+            - name: Get Version
+              run: echo "VERSION=$((grep -w 'version' | cut -d= -f2) < gradle.properties | rev | cut --complement -d- -f1 | rev)"
+
             -   name: Build the Package
                 env:
                     packageUser: ${{ github.actor }}
