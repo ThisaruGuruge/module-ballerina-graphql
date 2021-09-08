@@ -112,7 +112,9 @@ public class FieldFinder {
     }
 
     private InputValue getIncludeDeprecatedInputValue() {
-        return new InputValue(INCLUDE_DEPRECATED, this.getType(BOOLEAN), FALSE);
+        InputValue inputValue = new InputValue(INCLUDE_DEPRECATED, this.getType(BOOLEAN));
+        inputValue.setDefaultValue(FALSE);
+        return inputValue;
     }
 
     private void addSchemaTypeFields() {
@@ -137,7 +139,7 @@ public class FieldFinder {
             for (Type memberType : unionType.getMemberTypes()) {
                 schemaType.addEnumValue(memberType.getZeroValue());
             }
-        } else if (schemaType.getKind() == TypeKind.OBJECT) {
+        } else if (schemaType.getKind() == TypeKind.OBJECT || schemaType.getKind() == TypeKind.INPUT_OBJECT) {
             findFieldsForObjectKindSchemaTypes(schemaType);
         }
     }
@@ -175,8 +177,7 @@ public class FieldFinder {
             SchemaType schemaType = new SchemaType(null, TypeKind.LIST);
             Type elementType = arrayType.getElementType();
             if (elementType.getTag() != TypeTags.UNION_TAG) {
-                SchemaType wrapperType = getNonNullType();
-                wrapperType.setOfType(getSchemaTypeFromType(elementType));
+                SchemaType wrapperType = getNonNullType(getSchemaTypeFromType(elementType));
                 schemaType.setOfType(wrapperType);
             } else {
                 schemaType.setOfType(getSchemaTypeFromType(elementType));
@@ -195,21 +196,28 @@ public class FieldFinder {
     private void getFieldsFromRecordType(SchemaType schemaType) {
         RecordType recordType = (RecordType) schemaType.getBalType();
         for (Field field : recordType.getFields().values()) {
-            SchemaField schemaField = new SchemaField(field.getFieldName());
-            SchemaType fieldType = getSchemaTypeFromType(field.getFieldType());
-            if (isRequired(field)) {
-                SchemaType wrapperType = getNonNullType();
-                wrapperType.setOfType(fieldType);
-                schemaField.setType(wrapperType);
+            if (schemaType.getKind() == TypeKind.INPUT_OBJECT) {
+                getFieldsFromInputObjectType(schemaType, field);
             } else {
-                schemaField.setType(fieldType);
+                SchemaField schemaField = new SchemaField(field.getFieldName());
+                setTypeForField(field, schemaField);
+                if (field.getFieldType().getTag() == TypeTags.MAP_TAG) {
+                    SchemaType nonNullType = getNonNullType(this.typeMap.get(STRING));
+                    nonNullType.setOfType(this.typeMap.get(STRING));
+                    schemaField.addArg(new InputValue(KEY, nonNullType));
+                }
+                schemaType.addField(schemaField);
             }
-            if (field.getFieldType().getTag() == TypeTags.MAP_TAG) {
-                SchemaType nonNullType = getNonNullType();
-                nonNullType.setOfType(this.typeMap.get(STRING));
-                schemaField.addArg(new InputValue(KEY, nonNullType));
-            }
-            schemaType.addField(schemaField);
+        }
+    }
+
+    private void getFieldsFromInputObjectType(SchemaType schemaType, Field field) {
+        SchemaType fieldType = getSchemaTypeFromType(field.getFieldType());
+        if (field.getFieldType().isNilable() || !isRequired(field)) {
+            schemaType.addInputField(new InputValue(field.getFieldName(), fieldType));
+        } else {
+            SchemaType wrapperType = getNonNullType(fieldType);
+            schemaType.addInputField(new InputValue(field.getFieldName(), wrapperType));
         }
     }
 
@@ -248,37 +256,44 @@ public class FieldFinder {
         if (resourceReturnType.isNilable()) {
             schemaField.setType(fieldType);
         } else {
-            SchemaType nonNullType = getNonNullType();
-            nonNullType.setOfType(fieldType);
+            SchemaType nonNullType = getNonNullType(fieldType);
+            schemaField.setType(nonNullType);
+        }
+    }
+
+    private void setTypeForField(Field field, SchemaField schemaField) {
+        SchemaType fieldType = getSchemaTypeFromType(field.getFieldType());
+        if (field.getFieldType().isNilable() || !isRequired(field)) {
+            schemaField.setType(fieldType);
+        } else {
+            SchemaType nonNullType = getNonNullType(fieldType);
             schemaField.setType(nonNullType);
         }
     }
 
     private void addArgsToSchemaField(MethodType method, SchemaField schemaField) {
         for (Parameter parameter : method.getParameters()) {
-            SchemaType inputValueType;
-            if (parameter.type.isNilable()) {
-                Type inputType = getInputTypeFromNilableType((UnionType) parameter.type);
-                inputValueType = this.typeMap.get(getTypeNameFromType(inputType));
-            } else {
-                inputValueType = this.typeMap.get(getTypeNameFromType(parameter.type));
-            }
+            Type inputType;
             InputValue inputValue;
             if (parameter.type.isNilable()) {
-                inputValue = new InputValue(parameter.name, inputValueType);
-            } else if (parameter.isDefault) {
-                inputValue = new InputValue(parameter.name, inputValueType, parameter.type.getZeroValue().toString());
+                inputType = getInputTypeFromNilableType((UnionType) parameter.type);
+                inputValue = new InputValue(parameter.name, this.getType(getTypeNameFromType(inputType)));
             } else {
-                SchemaType nonNullType = getNonNullType();
-                nonNullType.setOfType(inputValueType);
-                inputValue = new InputValue(parameter.name, nonNullType);
+                inputType = parameter.type;
+                SchemaType wrapperType = getNonNullType(this.getType(getTypeNameFromType(inputType)));
+                inputValue = new InputValue(parameter.name, wrapperType);
+            }
+            if (parameter.isDefault) {
+                inputValue.setDefaultValue(inputType.getZeroValue().toString());
             }
             schemaField.addArg(inputValue);
         }
     }
 
-    private static SchemaType getNonNullType() {
-        return new SchemaType(null, TypeKind.NON_NULL);
+    private static SchemaType getNonNullType(SchemaType schemaType) {
+        SchemaType wrapperType = new SchemaType(null, TypeKind.NON_NULL);
+        wrapperType.setOfType(schemaType);
+        return wrapperType;
     }
 
     private static Type getInputTypeFromNilableType(UnionType unionType) {
