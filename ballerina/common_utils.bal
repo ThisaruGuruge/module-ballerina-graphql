@@ -126,12 +126,12 @@ isolated function getTypeNameFromType(__Type schemaType) returns string {
 }
 
 isolated function getTypeNameFromValue(Scalar value) returns string {
-    if (typeof value).toString() == "typedesc int" {
-        return INT;
-    } else if (typeof value).toString() == "typedesc boolean" {
-        return BOOLEAN;
-    } else if (typeof value).toString() == "typedesc float" {
+    if value is float {
         return FLOAT;
+    } else if value is boolean {
+        return BOOLEAN;
+    } else if value is int {
+        return INT;
     } else {
         return STRING;
     }

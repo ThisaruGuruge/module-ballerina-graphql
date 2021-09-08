@@ -229,6 +229,17 @@ isolated function testTypeNameIntrospectionInFragments() returns error? {
 }
 
 @test:Config {
+    groups: ["input_objects", "introspection"]
+}
+isolated function testIntrospectionOnServiceWithInputObjects() returns error? {
+    string graphqlUrl = "http://localhost:9091/input_objects";
+    string document = check getGraphQLDocumentFromFile("introspection_on_service_with_input_objects.txt");
+    json result = check getJsonPayloadFromService(graphqlUrl, document);
+    json expectedPayload = check getJsonContentFromFile("introspection_on_service_with_input_objects.json");
+    assertJsonValuesWithOrder(result, expectedPayload);
+}
+
+@test:Config {
     groups: ["introspection", "typename", "validation"]
 }
 isolated function testTypeNameIntrospectionOnScalar() returns error? {
@@ -316,4 +327,15 @@ isolated function testTypeIntrospectionWithoutFields() returns error? {
         ]
     };
     assertJsonValuesWithOrder(result, expectedPayload);
+}
+
+@test:Config {
+    groups: ["introspection", "type", "inputs"]
+}
+isolated function testIntrospectionOnInputsWithDefaultValues() returns error? {
+    string graphqlUrl = "http://localhost:9091/input_type_introspection";
+    string document = check getGraphQLDocumentFromFile("introspection_on_inputs_with_default_values.txt");
+    json actualPayload = check getJsonPayloadFromService(graphqlUrl, document);
+    json expectedPayload = check getJsonContentFromFile("introspection_on_inputs_with_default_values.json");
+    assertJsonValuesWithOrder(actualPayload, expectedPayload);
 }
