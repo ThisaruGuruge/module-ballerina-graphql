@@ -9,7 +9,7 @@ jobs:
     publish-release:
         name: Release Package
         runs-on: ubuntu-latest
-        if: github.repository_owner == 'ballerina-platform'
+        if: github.repository_owner == 'ThisaruGuruge'
         steps:
             -   name: Checkout Repository
                 uses: actions/checkout@v2
@@ -51,7 +51,7 @@ jobs:
                     publishPAT: ${{ secrets.BALLERINA_BOT_TOKEN }}
                 run: |
                     ./gradlew release -Prelease.useAutomaticVersion=true
-                    ./gradlew -Pversion=${VERSION} publish -x test -PpublishToCentral=true
+                    ./gradlew -Pversion=${VERSION} publish -x test
 
             -   name: GitHub Release and Release Sync PR
                 env:

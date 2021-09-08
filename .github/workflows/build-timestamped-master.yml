@@ -9,7 +9,7 @@ on:
 jobs:
     build:
         runs-on: ubuntu-latest
-        if: github.repository_owner == 'ballerina-platform'
+        if: github.repository_owner == 'ThisaruGuruge'
         steps:
             -   name: Checkout Repository
                 uses: actions/checkout@v2
