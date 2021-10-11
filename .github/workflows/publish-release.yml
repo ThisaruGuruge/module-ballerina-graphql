@@ -9,7 +9,6 @@ jobs:
     publish-release:
         name: Release Package
         runs-on: ubuntu-latest
-        if: github.repository_owner == 'ballerina-platform'
         steps:
             -   name: Checkout Repository
                 uses: actions/checkout@v2
@@ -39,7 +38,7 @@ jobs:
             -   name: Get Release Version
                 run: echo "VERSION=$((grep -w 'version' | cut -d= -f2) < gradle.properties | rev | cut --complement -d- -f1 | rev)" >> $GITHUB_ENV
 
-            -   name: Pre release depenency version update
+            -   name: Pre release dependency version update
                 env:
                     GITHUB_TOKEN: ${{ secrets.BALLERINA_BOT_TOKEN }}
                 run: |
@@ -66,7 +65,7 @@ jobs:
                     git config user.name ${{ secrets.BALLERINA_BOT_USERNAME }}
                     git config user.email ${{ secrets.BALLERINA_BOT_EMAIL }}
                     ./gradlew clean release -Prelease.useAutomaticVersion=true
-                    ./gradlew -Pversion=${VERSION} publish -x test -PpublishToCentral=true
+                    ./gradlew -Pversion=${VERSION} publish -x test
 
             -   name: GitHub Release and Release Sync PR
                 env:
