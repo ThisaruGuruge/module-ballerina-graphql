@@ -27,7 +27,7 @@ jobs:
                 uses: codecov/codecov-action@v3
                 with:
                     token: ${{ secrets.CODECOV_TOKEN }}
-                    files: ./ballerina/target/report/graphql/coverage-report.xml,./ballerina-tests/target/report/graphql_tests/coverage-report.xml
+                    files: ./ballerina-tests/target/report/graphql_tests/coverage-report.xml,./ballerina/target/report/graphql/coverage-report.xml
 
     windows-build:
         name: Build on Windows
