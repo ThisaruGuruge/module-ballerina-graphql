@@ -46,8 +46,8 @@ jobs:
 
             -   name: Fix Paths in CodeCov XML
                 run: |
-                    sed -i 's/ballerina\/graphql\/.*\//ballerina/g' ${{ GITHUB_PATH }}/ballerina-tests/target/report/graphql_tests/coverage-report.xml
-                    cat ${{ GITHUB_PATH }}/ballerina-tests/target/report/graphql_tests/coverage-report.xml
+                    sed -i 's/ballerina\/graphql\/.*\//ballerina/g' ./ballerina-tests/target/report/graphql_tests/coverage-report.xml
+                    cat ./ballerina-tests/target/report/graphql_tests/coverage-report.xml
 
             -   name: Generate CodeCov Report
                 uses: codecov/codecov-action@v3
