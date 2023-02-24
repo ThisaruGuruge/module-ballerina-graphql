@@ -44,13 +44,11 @@ jobs:
                     publishPAT: ${{ secrets.BALLERINA_BOT_TOKEN }}
                 run: ./gradlew publish --no-daemon --scan
 
-            -   name: Fix Paths in CodeCov XML
-                run: |
-                    sed -i 's/ballerina\/graphql\/.*\//ballerina/g' ./ballerina-tests/target/report/graphql_tests/coverage-report.xml
-                    cat ./ballerina-tests/target/report/graphql_tests/coverage-report.xml
-
             -   name: Generate CodeCov Report
                 uses: codecov/codecov-action@v3
+                with:
+                    token: ${{ secrets.CODECOV_TOKEN }}
+
             -   name: Upload Artifact
                 uses: actions/upload-artifact@v2
                 with:
