@@ -34,11 +34,15 @@ jobs:
                 run: |
                   ./gradlew build
 
+            - name: Check Code Cov
+              run: |
+                echo "ballerina-platform/${{ github.event.inputs.repo }}"
+
             - name: Generate CodeCov Report
               uses: codecov/codecov-action@v5
               with:
                 token: ${{ secrets.CODECOV_TOKEN }}
-                slug: ballerina-platform/module-ballerina-graphql
+                slug: ballerina-platform/${{ github.event.inputs.repo }}
 
     windows-build:
         name: Build on Windows
